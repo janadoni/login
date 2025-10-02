@@ -1,5 +1,6 @@
 package com.example.login.config;
 
+import com.example.login.service.CustomOAuth2UserService;
 import com.example.login.service.daoproviderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,10 @@ public class config {
     public daoproviderService daoproviderService;
     @Autowired
     public JWTAuthenticationfilter jwtAuthenticationfilter;
+    @Autowired
+    public OauthSuccessHandler oauthSuccessHandler;
+    @Autowired
+    public CustomOAuth2UserService customOAuth2UserService;
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder(15);
@@ -41,12 +46,15 @@ public class config {
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) // allow frames
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**","/api/cafe/generatetoken", "/api/cafe/createuser",
-                                "/login/oauth2/code/google","/oauth2/authorization/google","/").permitAll() // allow H2 console
+                                "/login/oauth2/code/google","/oauth2/authorization/google","/login", "/default-ui.css", "/favicon.ico").permitAll() // allow H2 console
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(Customizer.withDefaults());
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .addFilterBefore(jwtAuthenticationfilter, UsernamePasswordAuthenticationFilter.class);
+                .oauth2Login(oauth -> oauth.userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(customOAuth2UserService)
+                        )
+                        .successHandler(oauthSuccessHandler))
+               .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+               .addFilterBefore(jwtAuthenticationfilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
     @Bean

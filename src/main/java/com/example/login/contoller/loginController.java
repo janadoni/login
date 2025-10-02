@@ -25,7 +25,7 @@ public class loginController {
     public Mono<ResponseEntity<?>> registryUser(@RequestBody login login) throws Exception {
     return loginServiceImpl.registry(login).map(response -> {return new ResponseEntity<login>(response,HttpStatus.OK);} );
     }
-    @GetMapping("/")
+    @GetMapping("/dashboard")
     public Mono<ResponseEntity<?>> registryUser1() throws Exception {
          return Mono.just(new ResponseEntity<String>("Ok workings",HttpStatus.OK));
     }

@@ -27,7 +27,13 @@ public class JWTAuthenticationfilter extends OncePerRequestFilter {
     public JWTFilterService loginService ;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String uri = request.getRequestURI();
+        if (uri.startsWith("/login") || uri.startsWith("/default-ui.css") || uri.startsWith("/favicon.ico")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         try {
+            request.getRequestURI();
             String authHeader = request.getHeader("Authorization");
             String token = null;
             String userName = null;
@@ -37,7 +43,7 @@ public class JWTAuthenticationfilter extends OncePerRequestFilter {
             }
             if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails details = daoproviderService.loadUserByUsername(userName);
-                if (loginService.isTokenValid(token, details)) {
+                if (!loginService.isTokenValid(token, details)) {
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(details, null, details.getAuthorities());
                     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
